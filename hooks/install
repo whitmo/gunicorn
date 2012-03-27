@@ -1,0 +1,4 @@
+#!/bin/bash
+
+apt-get install --no-install-recommends -y python-flup gunicorn python-eventlet 
+

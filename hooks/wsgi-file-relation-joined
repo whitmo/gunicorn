@@ -1,0 +1,43 @@
+#!/bin/sh
+
+working_dir=$(relation-get working_dir)
+wsgi_file=$(relation-get wsgi_file)
+
+PORT=8080
+quit=0
+
+while [ "$quit" -ne 1 ]; do
+    netstat -na | grep 'tcp' | grep 'LISTEN' | awk '{print $4}' | cut -d: -f2 | grep $PORT >> /dev/null
+    if [ $? -ne 0 ]
+    then
+        quit=1
+    else
+        PORT=`expr $PORT + 1`
+    fi
+done
+
+cat > /etc/gunicorn.d/${JUJU_REMOTE_UNIT}-${JUJU_RELATION_NAME}.conf <<EOF
+CONFIG = {
+    'mode': 'wsgi',
+    'environment': {
+        'PYTHONPATH': '${working_dir}',
+    },
+    'working_dir': '${working_dir}',
+    'user': 'www-data',
+    'group': 'www-data',
+    'args': (
+        '--name=${JUJU_REMOTE_UNIT}-${JUJU_RELATION_NAME}',
+        '--worker-class=eventlet',
+        '--bind=0.0.0.0:${PORT}',
+        '--workers=2',
+        '--log-file=${working_dir}/gunicorn.log',
+        '--timeout=300',
+        '${wsgi_file}',
+    ),
+}
+EOF
+
+service gunicorn start
+service gunicorn restart
+
+open-port $PORT/tcp
