@@ -1,4 +1,4 @@
 #!/bin/bash
 
-apt-get install --no-install-recommends -y python-flup gunicorn python-eventlet 
+apt-get install --no-install-recommends -y gunicorn python-eventlet python-gevent python-tornado
 
