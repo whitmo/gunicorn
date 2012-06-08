@@ -1,0 +1,75 @@
+options:
+    wsgi_wsgi_file:
+        type: string
+        default: "wsgi"
+        description: "The name of the WSGI application."
+    wsgi_workers:
+        type: int
+        default: 2
+        description: "The number of worker process for handling requests."
+    wsgi_worker_class:
+        type: string
+        default: "sync"
+        description: "Gunicorn workers type."
+    wsgi_worker_connections:
+        type: int
+        default: 1000
+        description: "The maximum number of simultaneous clients."
+    wsgi_max_requests:
+        type: int
+        default: 0
+        description: "The maximum number of requests a worker will process before restarting."
+    wsgi_backlog:
+        type: int
+        default: 2048
+        description: "The maximum number of pending connections."
+    wsgi_preload:
+        type: string
+        default: "False"
+        description: "Load application code before the worker processes are forked."
+    wsgi_timeout:
+        type: int
+        default: 30
+        description: ""
+    wsgi_keepalive:
+        type: int
+        default: 2
+        description: ""
+    wsgi_debug:
+        type: string
+        default: "False"
+        description: "Turn on debugging in the server."
+    wsgi_umask:
+        type: string
+        default: "0"
+        description: "A bit mask for the file mode on files written by Gunicorn. The number 0 means Python guesses the base. Note that this affects unix socket permissions."
+    wsgi_user:
+        type: string
+        default: "www-data"
+        description: "Switch worker processes to run as this user. User id (as an int) or the name."
+    wsgi_group:
+        type: string
+        default: "www-data"
+        description: "Switch worker process to run as this group. A valid group id (as an int) or the name."
+    wsgi_error_logfile:
+        type: string
+        default: ""
+        description: "The Error log file to write to. If empty the file would be <your_application_dir>/gunicorn.log"
+    wsgi_log_config:
+        type: string
+        default: ""
+        description: "The log config file to use. Gunicorn uses the standard Python logging module's Configuration file format."
+    wsgi_log_level:
+        type: string
+        default: "info"
+        description: "The granularity of Error log outputs."
+    wsgi_access_logfile:
+        type: string
+        default: ""
+        description: "The Access log file to write to."
+    wsgi_access_logformat:
+        type: string
+        default: '%(h)s %(l)s %(u)s %(t)s "%(r)s" %(s)s %(b)s "%(f)s" "%(a)s"'
+        description: "The Access log format ."
+    
+    

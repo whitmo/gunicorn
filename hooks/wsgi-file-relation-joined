@@ -1,7 +1,44 @@
-#!/bin/sh
+#!/bin/bash
 
 working_dir=$(relation-get working_dir)
-wsgi_file=$(relation-get wsgi_file)
+
+if [ -z "$working_dir" ] ; then
+    exit 0 # wait for future handshake
+fi
+
+variables="wsgi_wsgi_file wsgi_workers wsgi_worker_class wsgi_worker_connections wsgi_max_requests wsgi_timeout wsgi_backlog wsgi_keep_alive wsgi_debug wsgi_user wsgi_group wsgi_umask wsgi_error_logfile wsgi_log_config wsgi_log_level wsgi_access_logfile wsgi_access_logformat"
+
+declare -A VAR
+for v in variables;do
+  VAR[$v]=$(relation-get $v)
+  if [ -z "${VAR[$v]}" ] ; then
+    VAR[$v]=$(config-get $v)
+  fi
+done
+
+# wsgi_file=${$(relation-get wsgi_file):-$(config-get wsgi_file)}
+# workers=$(relation-get workers)
+# worker_class=$(relation-get worker_class)
+# worker_connections=$(relation-get worker_connections)
+# max_requests=$(relation-get max_requests)
+# timeout=$(relation-get timeout)
+# backlog=$(relation-get backlog)
+# keep_alive=$(relation-get keep_alive)
+# debug=$(relation-get debug)
+# user=$(relation-get user)
+# group=$(relation-get group)
+# umask=$(relation-get umask)
+# error_logfile=$(relation-get error_logfile)
+# log_config=$(relation-get log_config)
+# log_level=$(relation-get log_level)
+# access_logfile=$(relation-get access_logfile)
+# access_logformat=$(relation-get access_logformat)
+
+
+if [ -z "$wsgi_error_logfile" ] ; then
+    error_logfile="${working_dir}/gunicorn.log"
+fi
+
 
 PORT=8080
 quit=0
@@ -23,16 +60,28 @@ CONFIG = {
         'PYTHONPATH': '${working_dir}',
     },
     'working_dir': '${working_dir}',
-    'user': 'www-data',
-    'group': 'www-data',
+    'user': '${VAR[wsgi_user]}',
+    'group': '${VAR[wsgi_group]}',
     'args': (
         '--name=${JUJU_REMOTE_UNIT}-${JUJU_RELATION_NAME}',
-        '--worker-class=eventlet',
-        '--bind=0.0.0.0:${PORT}',
-        '--workers=2',
-        '--log-file=${working_dir}/gunicorn.log',
-        '--timeout=300',
-        '${wsgi_file}',
+        '--workers=${VAR[wsgi_workers]}',
+        '--worker-class=${VAR[wsgi_WORKER_CLASS]}',
+        '--worker-connections=${VAR[wsgi_worker_connections]}',
+        '--preload=${VAR[wsgi_preload]}',
+        '--max-requests=${VAR[wsgi_max_requests]}',
+        '--backlog=${VAR[wsgi_backlog]}',
+        '--timeout=${VAR[wsgi_timeout]}',
+        '--keep-alive=${VAR[wsgi_keep_alive]}',
+        '--umask=${VAR[wsgi_umask]}',
+        '--bind=0.0.0.0:${VAR[wsgi_PORT]}',
+        '--error-file=${VAR[wsgi_error_file]}',
+        '--log-config=${VAR[wsgi_log_config]}',
+        '--log-level=${VAR[wsgi_log_level]}',
+        '--access-logfile=${VAR[wsgi_access_logfile]}',
+        '--access-logformat=${VAR[wsgi_access_logformat]}',
+        '--error-logfile=${VAR[wsgi_error_logfile]}',
+        '--debug=${VAR[wsgi_debug]}',
+        '${VAR[wsgi_wsgi_file]}',
     ),
 }
 EOF
