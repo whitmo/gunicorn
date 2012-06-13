@@ -47,10 +47,6 @@ options:
         type: string
         default: "-"
         description: "The log file to write to. If empty the file would be <your_application_dir>/gunicorn.log"
-    wsgi_log_config:
-        type: string
-        default: "None"
-        description: "The log config file to use. Gunicorn uses the standard Python logging module's Configuration file format."
     wsgi_log_level:
         type: string
         default: "info"
