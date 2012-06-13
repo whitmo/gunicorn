@@ -3,6 +3,7 @@
 working_dir=$(relation-get working_dir)
 
 if [ -z "$working_dir" ] ; then
+    juju-log "No working_dir yet: skipping."
     exit 0 # wait for future handshake
 fi
 
@@ -15,6 +16,8 @@ for v in variables;do
     VAR[$v]=$(config-get $v)
   fi
 done
+
+juju-log "Got variables: ${VAR[@]}"
 
 # wsgi_file=${$(relation-get wsgi_file):-$(config-get wsgi_file)}
 # workers=$(relation-get workers)
@@ -53,6 +56,8 @@ while [ "$quit" -ne 1 ]; do
     fi
 done
 
+juju-log "Writing config file: /etc/gunicorn.d/${JUJU_REMOTE_UNIT}-${JUJU_RELATION_NAME}.conf"
+
 cat > /etc/gunicorn.d/${JUJU_REMOTE_UNIT}-${JUJU_RELATION_NAME}.conf <<EOF
 CONFIG = {
     'mode': 'wsgi',
@@ -86,7 +91,11 @@ CONFIG = {
 }
 EOF
 
+
+juju-log "start/restart gunicorn"
+
 service gunicorn start
 service gunicorn restart
 
+juju-log "Opening port: $PORT"
 open-port $PORT/tcp
