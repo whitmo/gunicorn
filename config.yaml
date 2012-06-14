@@ -63,3 +63,7 @@ options:
         type: string
         default: ""
         description: "Extra settings. For example: {--debug},"
+    wsgi_timestamp:
+        type string
+        default: ""
+        description: "The variable to modify to trigger Gunicorn reload"
