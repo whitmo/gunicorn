@@ -1,3 +1,4 @@
 #!/bin/bash
+set -e
 
-service gunicorn stop
+service gunicorn stop || true
