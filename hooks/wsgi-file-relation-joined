@@ -1,6 +1,7 @@
 #!/bin/bash
+set -e
 
-unit_name=$(echo $JUJU_REMOTE_UNIT | sed -e 's,/,-,')
+unit_name=${JUJU_REMOTE_UNIT//\//-}
 working_dir=$(relation-get working_dir)
 
 if [ -z "$working_dir" ] ; then
@@ -30,7 +31,7 @@ PORT=8080
 quit=0
 
 while [ "$quit" -ne 1 ]; do
-    netstat -na | grep 'tcp' | grep 'LISTEN' | awk '{print $4}' | cut -d: -f2 | grep $PORT >> /dev/null
+    netstat -natl | grep 'tcp' | grep 'LISTEN' | awk '{print $4}' | cut -d: -f2 | grep $PORT >> /dev/null
     if [ $? -ne 0 ]
     then
         quit=1
@@ -74,8 +75,9 @@ EOF
 
 juju-log "start/restart gunicorn"
 
-service gunicorn start
-service gunicorn restart
+# We need this because when the contained charm configuration or code changed
+# Gunicorn needs to restart to run the new code.
+service gunicorn start || service gunicorn restart
 
 juju-log "Opening port: $PORT"
 open-port $PORT/tcp
