@@ -31,8 +31,7 @@ PORT=8080
 quit=0
 
 while [ "$quit" -ne 1 ]; do
-    netstat -natl | grep 'tcp' | grep 'LISTEN' | awk '{print $4}' | cut -d: -f2 | grep $PORT >> /dev/null
-    if [ $? -ne 0 ]
+    if [[ true == $(netstat -natl | grep 'tcp' | grep 'LISTEN' | awk '{print $4}' | cut -d: -f2 | grep -v -q $PORT || echo "true") ]]
     then
         quit=1
     else
