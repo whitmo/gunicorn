@@ -3,7 +3,7 @@ set -e
 
 unit_name=${JUJU_REMOTE_UNIT//\//-}
 
-bind_line=$(grep "bind=0.0.0.0:" /etc/gunicorn.d/${unit_name}-${JUJU_RELATION_NAME}.conf)
+bind_line=$(grep "bind=0.0.0.0:" /etc/gunicorn.d/${unit_name}.conf)
 PORT=$(echo ${bind_line} | grep -o "[0-9]*")
 
 relation-set port=$PORT hostname=`unit-get private-address`

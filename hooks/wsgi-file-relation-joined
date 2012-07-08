@@ -39,9 +39,9 @@ while [ "$quit" -ne 1 ]; do
     fi
 done
 
-juju-log "Writing config file: /etc/gunicorn.d/${unit_name}-${JUJU_RELATION_NAME}.conf"
+juju-log "Writing config file: /etc/gunicorn.d/${unit_name}.conf"
 
-cat > /etc/gunicorn.d/${unit_name}-${JUJU_RELATION_NAME}.conf <<EOF
+cat > /etc/gunicorn.d/${unit_name}.conf <<EOF
 CONFIG = {
     'mode': 'wsgi',
     'environment': {
@@ -51,7 +51,7 @@ CONFIG = {
     'user': '${VAR[wsgi_user]}',
     'group': '${VAR[wsgi_group]}',
     'args': (
-        '--name=${unit_name}-${JUJU_RELATION_NAME}',
+        '--name=${unit_name}',
         '--workers=${VAR[wsgi_workers]}',
         '--worker-class=${VAR[wsgi_worker_class]}',
         '--worker-connections=${VAR[wsgi_worker_connections]}',
