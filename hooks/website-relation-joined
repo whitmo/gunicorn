@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 set -e
 
 unit_name=${JUJU_REMOTE_UNIT//\//-}
