@@ -80,3 +80,6 @@ service gunicorn start || service gunicorn restart
 
 juju-log "Opening port: $PORT"
 open-port $PORT/tcp
+
+# Set the port number to be able to send it to the website hooks
+relation-set port=$PORT

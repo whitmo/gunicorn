@@ -7,9 +7,6 @@ description: |
   is broadly compatible with various web frameworks, simply implemented, light on
   server resources, and fairly speedy.
 subordinate: true
-provides:
-  website:
-    interface: http
 requires:
     wsgi-file:
        interface: wsgi
