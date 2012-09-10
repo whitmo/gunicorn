@@ -1,7 +1,6 @@
 options:
     wsgi_wsgi_file:
         type: string
-        default: "wsgi"
         description: "The name of the WSGI application."
     wsgi_workers:
         type: int
@@ -67,3 +66,11 @@ options:
         type: string
         default: ""
         description: "The variable to modify to trigger Gunicorn reload"
+    django_settings:
+        type: string
+        default: ""
+        description: "The Python path to a Django settings module."
+    python_path:
+        type: string
+        default: ""
+        description: "Set PYTHONPATH environment variable"
