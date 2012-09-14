@@ -11,3 +11,9 @@ requires:
     wsgi-file:
        interface: wsgi
        scope: container
+       optional: true
+    django-settings:
+       interface: django
+       scope: container
+       optional: true
+
