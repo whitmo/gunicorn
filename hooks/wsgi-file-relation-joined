@@ -47,7 +47,7 @@ if [[ $mode -eq "wsgi" ]] && [[ $(relation-get $wsgi_wsgi_file) -eq "" ]] ; then
     ${VAR[wsgi_wsgi_file]}="wsgi"
 fi
 
-if [[ -n $wsgi_wsgi_file ]] ; then
+if [[ -n ${VAR[wsgi_wsgi_file]} ]] ; then
     wsgi_wsgi_file="'${VAR[wsgi_wsgi_file]}',"
 fi
 
