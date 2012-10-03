@@ -96,7 +96,7 @@ juju-log "start/restart gunicorn"
 
 # We need this because when the contained charm configuration or code changed
 # Gunicorn needs to restart to run the new code.
-service gunicorn start || service gunicorn restart
+service gunicorn restart
 
 juju-log "Opening port: ${VAR[port]}"
 open-port ${VAR[port]}/tcp
