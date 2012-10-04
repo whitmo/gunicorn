@@ -9,7 +9,7 @@ if [ -z "$working_dir" ] ; then
     exit 0 # wait for future handshake
 fi
 
-variables="wsgi_wsgi_file wsgi_workers wsgi_worker_class wsgi_worker_connections wsgi_max_requests wsgi_timeout wsgi_backlog wsgi_keep_alive wsgi_extra wsgi_user wsgi_group wsgi_umask wsgi_log_file wsgi_log_level wsgi_access_logfile wsgi_access_logformat env_extra django_settings python_path"
+variables="wsgi_wsgi_file wsgi_workers wsgi_worker_class wsgi_worker_connections wsgi_max_requests wsgi_timeout wsgi_backlog wsgi_keep_alive wsgi_extra wsgi_user wsgi_group wsgi_umask wsgi_log_file wsgi_log_level wsgi_access_logfile wsgi_access_logformat env_extra django_settings python_path port"
 
 if [[ $JUJU_RELATION_ID =~ django.* ]]; then
     mode=django
@@ -57,18 +57,6 @@ else
     python_path=${VAR[python_path]}
 fi
 
-PORT=8080
-quit=0
-
-while [ "$quit" -ne 1 ]; do
-    if [[ true == $(netstat -natl | grep 'tcp' | grep 'LISTEN' | awk '{print $4}' | cut -d: -f2 | grep -q $PORT || echo "true") ]]
-    then
-        quit=1
-    else
-        PORT=`expr $PORT + 1`
-    fi
-done
-
 juju-log "Writing config file: /etc/gunicorn.d/${unit_name}.conf"
 
 cat > /etc/gunicorn.d/${unit_name}.conf <<EOF
@@ -92,7 +80,7 @@ CONFIG = {
         '--timeout=${VAR[wsgi_timeout]}',
         '--keep-alive=${VAR[wsgi_keep_alive]}',
         '--umask=${VAR[wsgi_umask]}',
-        '--bind=0.0.0.0:${PORT}',
+        '--bind=0.0.0.0:${VAR[port]}',
         '--log-file=${VAR[wsgi_log_file]}',
         '--log-level=${VAR[wsgi_log_level]}',
         '--access-logfile=${VAR[wsgi_access_logfile]}',
@@ -108,7 +96,7 @@ juju-log "start/restart gunicorn"
 
 # We need this because when the contained charm configuration or code changed
 # Gunicorn needs to restart to run the new code.
-service gunicorn start || service gunicorn restart
+service gunicorn restart
 
-juju-log "Opening port: $PORT"
-open-port $PORT/tcp
+juju-log "Opening port: ${VAR[port]}"
+open-port ${VAR[port]}/tcp

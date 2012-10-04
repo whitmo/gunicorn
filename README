@@ -33,7 +33,6 @@ Example deployment
        http://<machine-addr>:8080/
 
    To find out the public address of gunicorn/python-moinmoin, look for it in
-   the output of the `juju status` command. Also, the second gunicorn server will
-   be launch to port 8081. The script grab the first free port from 8080.
+   the output of the `juju status` command.
    I recommend using a reverse proxy like Nginx in front of Gunicorn. 
 
