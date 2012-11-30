@@ -1,5 +1,24 @@
 #!/bin/bash
 set -e
 
-apt-get install --no-install-recommends -y gunicorn python-eventlet python-gevent python-tornado
+# Suboridnate charm hooks can run in parallel with other charm hooks
+# on the same unit Bug #1068624. So a hook may fail to get a apt-get lock.
+COUNTER=0
+APT_LOCKED=1
+while true; do
+    lsof /var/lib/dpkg/lock > /dev/null 2>&1 || APT_LOCKED=0
+    if [[ $APT_LOCKED -eq 0 ]]; then
+        apt-get install --no-install-recommends -q -y gunicorn \
+            python-eventlet \
+            python-gevent \
+            python-tornado 
+        break
+    fi
+    if [[ $COUNTER -gt 5 ]]; then
+        echo "Failed to obtain apt lock to install python-amqplib"
+        exit 1
+    fi
+    sleep 60
+    COUNTER=$[$COUNTER+1]
+done
 
