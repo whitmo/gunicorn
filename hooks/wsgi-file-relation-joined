@@ -43,8 +43,8 @@ if [ -n "$VAR[django_settings]" ] ; then
 fi
 
 # If running in wsgi mode then set a default wsgi file
-if [[ $mode -eq "wsgi" ]] && [[ $(relation-get $wsgi_wsgi_file) -eq "" ]] ; then
-    ${VAR[wsgi_wsgi_file]}="wsgi"
+if [[ $mode -eq "wsgi" ]] && [[ $(relation-get wsgi_wsgi_file) -eq "" ]] ; then
+    VAR[wsgi_wsgi_file]="wsgi"
 fi
 
 if [[ -n ${VAR[wsgi_wsgi_file]} ]] ; then
@@ -54,7 +54,7 @@ fi
 if [[ -z ${VAR[python_path]} ]] ; then
     python_path=${working_dir}
 else
-    python_path=${VAR[python_path]}
+    python_path="${VAR[python_path]}"
 fi
 
 juju-log "Writing config file: /etc/gunicorn.d/${unit_name}.conf"
@@ -99,4 +99,4 @@ juju-log "start/restart gunicorn"
 service gunicorn restart
 
 juju-log "Opening port: ${VAR[port]}"
-open-port ${VAR[port]}/tcp
+open-port "${VAR[port]}/tcp"
