@@ -1,11 +1,1 @@
-#!/bin/bash
-set -e
-
-home=`dirname $0`
-
-juju-log "Upgrading charm by running install hook again."
-$home/install
-
-juju-log "Upgrading charm, running config-changed hook again."
-$home/config-changed
-
+hooks.py

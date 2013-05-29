@@ -1,6 +1,0 @@
-#!/bin/bash
-set -e
-
-juju-log "reloading Gunicorn"
-
-service gunicorn reload || true

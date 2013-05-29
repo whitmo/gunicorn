@@ -18,8 +18,6 @@ fallback to the global configuration of the charm.
 Example deployment
 ------------------
 
-
-
 1. Deployment with python-moinmoin for example::
 
     juju bootstrap
@@ -36,3 +34,18 @@ Example deployment
    the output of the `juju status` command.
    I recommend using a reverse proxy like Nginx in front of Gunicorn. 
 
+Changelog
+---------
+3:
+
+  Notable changes:
+
+    * Rewrite the charm using python instead of BASH scripts
+    * add listen_ip configuration variable
+
+  Backwards incompatible changes:
+    * Remove the Django mode since Gunicorn is not recommending it anymore.
+    * Use Upstart to manage daemons
+    * no start/stop hook anymore use related charms instead.
+    * no configuration change directly on the charm anymore, use related charms instead.
+    * no access logging by default

@@ -1,0 +1,37 @@
+#--------------------------------------------------------------
+# This file is managed by Juju; ANY CHANGES WILL BE OVERWRITTEN
+#--------------------------------------------------------------
+
+description "Gunicorn daemon for the {{ project_name }} project"
+
+start on (local-filesystems and net-device-up IFACE=eth0)
+stop on runlevel [!12345]
+
+# If the process quits unexpectadly trigger a respawn
+respawn
+
+setuid {{ wsgi_user }}
+setgid {{ wsgi_group }}
+chdir {{ working_dir }}
+
+# tell upstart we're creating a daemon
+# upstart manages PID creation for you.
+expect fork
+
+# Can be remove with Gunicorn>1.17
+env PYTHONPATH={{ python_path }}
+exec gunicorn \
+    --name={{ project_name }} \
+    --pythonpath {{ python_path }} \
+    --workers={{ wsgi_workers }} \
+    --worker-class={{ wsgi_worker_class }} \
+    --worker-connections={{ wsgi_worker_connections }} \
+    --max-requests={{ wsgi_max_requests }} \
+    --backlog={{ wsgi_backlog }} \
+    --timeout={{ wsgi_timeout }} \
+    --keep-alive={{ wsgi_keep_alive }} \
+    --umask={{ wsgi_umask }} \
+    --bind={{ listen_ip }}:{{ port }} \
+    --log-file={{ wsgi_log_file }} \
+    --log-level={{ wsgi_log_level }} \
+    {{ wsgi_extra }} {{ wsgi_wsgi_file }}
