@@ -14,12 +14,9 @@ setuid {{ wsgi_user }}
 setgid {{ wsgi_group }}
 chdir {{ working_dir }}
 
-# tell upstart we're creating a daemon
-# upstart manages PID creation for you.
-expect fork
-
-# Can be remove with Gunicorn>1.17
+# This line can be removed with Gunicorn>1.17
 env PYTHONPATH={{ python_path }}
+
 exec gunicorn \
     --name={{ project_name }} \
     --pythonpath {{ python_path }} \
