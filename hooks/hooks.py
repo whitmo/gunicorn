@@ -448,16 +448,12 @@ def wsgi_file_relation_joined_changed():
     # Gunicorn needs to restart to run the new code.
     run("service %s restart || service %s start" % (remote_unit_name, remote_unit_name))
 
-    open_port(config_data['port'])
-
 
 def wsgi_file_relation_broken():
     remote_unit_name = sanitize(os.environ['JUJU_REMOTE_UNIT'].split('/')[0])
 
     run('service %s stop' % remote_unit_name)
     run('rm /etc/init/%s.conf' % remote_unit_name)
-
-    close_port(config_data['port'])
 
 
 ###############################################################################
