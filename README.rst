@@ -24,7 +24,7 @@ Example deployment
     juju deploy --config mywiki_with_wsgi_settings.yaml python-moinmoin
     juju deploy gunicorn
     juju add-relation gunicorn python-moinmoin
-    juju expose gunicorn
+    juju expose python-moinmoin
 
 2. Accessing your new wiki should be ready at::
 
@@ -49,3 +49,4 @@ Changelog
     * no start/stop hook anymore use related charms instead.
     * no configuration change directly on the charm anymore, use related charms instead.
     * no access logging by default
+    * exposing a port must now be done in the linked charm instead of this one
