@@ -1,6 +1,7 @@
 name: gunicorn
 summary: Gunicorn
 maintainer: Patrick Hetu <patrick.hetu@gmail.com>
+categories: ["misc"]
 description: |
   Gunicorn or Green Unicorn is a Python WSGI HTTP Server for UNIX. It's a
   pre-fork worker model ported from Ruby's Unicorn project. The Gunicorn server
@@ -12,8 +13,3 @@ requires:
        interface: wsgi
        scope: container
        optional: true
-    django-settings:
-       interface: django
-       scope: container
-       optional: true
-
