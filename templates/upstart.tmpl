@@ -2,7 +2,7 @@
 # This file is managed by Juju; ANY CHANGES WILL BE OVERWRITTEN
 #--------------------------------------------------------------
 
-description "Gunicorn daemon for the {{ project_name }} project"
+description "Gunicorn daemon for the {{ project_name }} project"
 
 start on (local-filesystems and net-device-up IFACE=eth0)
 stop on runlevel [!12345]
@@ -31,4 +31,5 @@ exec gunicorn \
     --bind={{ listen_ip }}:{{ port }} \
     --log-file={{ wsgi_log_file }} \
     --log-level={{ wsgi_log_level }} \
-    {{ wsgi_extra }} {{ wsgi_wsgi_file }}
+    {{ wsgi_extra }} \
+    {{ wsgi_wsgi_file }}

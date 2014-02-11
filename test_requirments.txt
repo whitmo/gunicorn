@@ -1,0 +1,6 @@
+mock
+nose
+pyaml
+python-apt
+jinja2
+
