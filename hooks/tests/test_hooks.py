@@ -68,9 +68,7 @@ class HookTestCase(TestCase):
         self.assertEqual(tmpl, 'upstart.tmpl')
         self.assertEqual(path, '/etc/init/%s.conf' % self.SERVICE_NAME)
         self.assertEqual(config, expected)
-        self.host.service_reload.assert_called_once_with(
-            self.SERVICE_NAME, restart_on_failure=True
-        )
+        self.host.service_restart.assert_called_once_with(self.SERVICE_NAME)
 
     def get_default_context(self):
         expected = DEFAULTS.copy()
@@ -98,7 +96,7 @@ class HookTestCase(TestCase):
         del self.relation_data['working_dir']
         hooks.configure_gunicorn()
         self.assertFalse(self.process_template.called)
-        self.assertFalse(self.host.service_reload.called)
+        self.assertFalse(self.host.service_restart.called)
 
     def test_configure_gunicorn_relation_data(self):
         self.relation_data['port'] = 9999

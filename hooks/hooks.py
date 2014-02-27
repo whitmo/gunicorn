@@ -112,7 +112,7 @@ def configure_gunicorn():
 
     # We need this because when the contained charm configuration or code
     # changed Gunicorn needs to restart to run the new code.
-    host.service_reload(service_name, restart_on_failure=True)
+    host.service_restart(service_name)
 
 
 @hooks.hook("wsgi_file_relation_broken")

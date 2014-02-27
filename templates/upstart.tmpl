@@ -9,6 +9,7 @@ stop on runlevel [!12345]
 
 # If the process quits unexpectadly trigger a respawn
 respawn
+respawn limit 10 5
 
 setuid {{ wsgi_user }}
 setgid {{ wsgi_group }}
