@@ -69,12 +69,19 @@ def install():
 def configure_gunicorn():
     wsgi_config = hookenv.config()
 
+    relations = hookenv.relations_of_type('wsgi-file')
+    if not relations:
+        hookenv.log("No wsgi-file relation, nothing to do")
+        return
+
+    relation_data = relations[0]
+
     service_name = sanitized_service_name()
     wsgi_config['unit_name'] = service_name
 
     project_conf = upstart_conf_path(service_name)
 
-    working_dir = hookenv.relation_get('working_dir')
+    working_dir = relation_data.get('working_dir', None)
     if not working_dir:
         return
 
@@ -82,7 +89,6 @@ def configure_gunicorn():
     wsgi_config['project_name'] = service_name
 
     # any valid config item can be overidden by a relation item
-    relation_data = hookenv.relation_get()
     for key, relation_value in relation_data.items():
         if key in wsgi_config:
             wsgi_config[key] = relation_value
@@ -101,14 +107,6 @@ def configure_gunicorn():
     wsgi_config['env_extra'] = [
         v.split('=') for v in shlex.split(env_extra) if '=' in v
     ]
-
-    # only specify access log details if the access configs are set
-    if wsgi_config['wsgi_access_logfile']:
-        wsgi_config['wsgi_extra'] = " ".join([
-            wsgi_config['wsgi_extra'],
-            '--access-logfile=%s' % wsgi_config['wsgi_access_logfile'],
-            '--access-logformat="%s"' % wsgi_config['wsgi_access_logformat']
-        ])
 
     process_template('upstart.tmpl', wsgi_config, project_conf)
 

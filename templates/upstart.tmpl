@@ -34,5 +34,7 @@ exec gunicorn \
     --bind={{ listen_ip }}:{{ port }} \
     --log-file={{ wsgi_log_file }} \
     --log-level={{ wsgi_log_level }} \
+    {% if wsgi_access_logfile -%} --access-logfile={{ wsgi_access_logfile }} {%- endif %} \
+    {% if wsgi_access_logformat -%} --access-logformat={{ wsgi_access_logformat }} {%- endif %} \
     {{ wsgi_extra }} \
     {{ wsgi_wsgi_file }}

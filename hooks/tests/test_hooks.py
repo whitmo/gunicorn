@@ -55,7 +55,7 @@ class HookTestCase(TestCase):
         self.host = self.apply_patch('hooks.host')
 
         self.hookenv.config.return_value = self.config
-        self.hookenv.relation_get.return_value = self.relation_data
+        self.hookenv.relations_of_type.return_value = [self.relation_data]
 
         # mocking utilities that touch the host/environment
         self.process_template = self.apply_patch('hooks.process_template')

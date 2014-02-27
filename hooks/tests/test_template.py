@@ -41,6 +41,8 @@ exec gunicorn \\
     --bind=LISTEN_IP:PORT \\
     --log-file=WSGI_LOG_FILE \\
     --log-level=WSGI_LOG_LEVEL \\
+    --access-logfile=WSGI_ACCESS_LOGFILE \\
+    --access-logformat=WSGI_ACCESS_LOGFORMAT \\
     WSGI_EXTRA \\
     WSGI_WSGI_FILE
 """.strip()
@@ -66,7 +68,7 @@ class TemplateTestCase(TestCase):
         patch_hookenv.start()
         self.addCleanup(patch_hookenv.stop)
 
-    def test_template(self):
+    def get_test_context(self):
         keys = [
             'project_name',
             'wsgi_user',
@@ -92,8 +94,31 @@ class TemplateTestCase(TestCase):
         ]
         ctx = dict((k, k.upper()) for k in keys)
         ctx['env_extra'] = dict(A="1", B="1 2").items()
+        return ctx
+
+    def test_template(self):
+
+        ctx = self.get_test_context()
 
         hooks.process_template('upstart.tmpl', ctx, 'path')
         output = self.file.write.call_args[0][0]
 
         self.assertMultiLineEqual(EXPECTED, output)
+
+    def test_no_access_logfile(self):
+        ctx = self.get_test_context()
+        ctx['wsgi_access_logfile'] = ""
+
+        hooks.process_template('upstart.tmpl', ctx, 'path')
+        output = self.file.write.call_args[0][0]
+
+        self.assertNotIn('--access-logfile', output)
+
+    def test_no_access_logformat(self):
+        ctx = self.get_test_context()
+        ctx['wsgi_access_logformat'] = ""
+
+        hooks.process_template('upstart.tmpl', ctx, 'path')
+        output = self.file.write.call_args[0][0]
+
+        self.assertNotIn('--access-logformat', output)
