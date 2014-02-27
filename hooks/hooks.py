@@ -62,7 +62,10 @@ def install():
     fetch.apt_install(CHARM_PACKAGES)
 
 
-@hooks.hook("wsgi-file-relation-joined", "wsgi-file-relation-changed")
+@hooks.hook(
+    "config-changed",
+    "wsgi-file-relation-joined",
+    "wsgi-file-relation-changed")
 def configure_gunicorn():
     wsgi_config = hookenv.config()
 
