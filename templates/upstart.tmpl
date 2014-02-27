@@ -17,6 +17,9 @@ chdir {{ working_dir }}
 # This line can be removed and replace with the --pythonpath {{ python_path }} \
 # option with Gunicorn>1.17
 env PYTHONPATH={{ python_path }}
+{% for name, value in env_extra -%}
+env {{ name }}="{{ value }}"
+{% endfor %}
 
 exec gunicorn \
     --name={{ project_name }} \

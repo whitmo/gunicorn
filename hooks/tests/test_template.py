@@ -24,6 +24,9 @@ chdir WORKING_DIR
 # This line can be removed and replace with the --pythonpath PYTHON_PATH \\
 # option with Gunicorn>1.17
 env PYTHONPATH=PYTHON_PATH
+env A="1"
+env B="1 2"
+
 
 exec gunicorn \\
     --name=PROJECT_NAME \\
@@ -88,7 +91,7 @@ class TemplateTestCase(TestCase):
             'wsgi_wsgi_file',
         ]
         ctx = dict((k, k.upper()) for k in keys)
-        ctx['env_extra'] = dict(FOO="BAR")
+        ctx['env_extra'] = dict(A="1", B="1 2").items()
 
         hooks.process_template('upstart.tmpl', ctx, 'path')
         output = self.file.write.call_args[0][0]

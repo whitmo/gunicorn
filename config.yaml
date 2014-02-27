@@ -79,3 +79,9 @@ options:
         type: int
         default: 8080
         description: "Port the application will be listenning."
+    env_extra:
+        type: string
+        default: ""
+        description: >
+            List of environment variables for the wsgi process. 
+            e.g. FOO="bar" BAZ="1 2 3"

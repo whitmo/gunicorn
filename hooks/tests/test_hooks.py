@@ -78,6 +78,7 @@ class HookTestCase(TestCase):
         expected['working_dir'] = self.WORKING_DIR
         expected['project_name'] = self.SERVICE_NAME
         expected['wsgi_workers'] = 2
+        expected['env_extra'] = []
         fmt = expected['wsgi_access_logformat'].replace('"', '\\"')
         expected['wsgi_access_logformat'] = fmt
         return expected
@@ -114,6 +115,22 @@ class HookTestCase(TestCase):
 
         self.assert_wsgi_config_applied(expected)
 
+    def test_env_extra_parsing(self):
+        self.relation_data['env_extra'] = 'A=1 B="2" C="3 4" D= E'
+
+        hooks.configure_gunicorn()
+
+        expected = self.get_default_context()
+        expected['env_extra'] = [
+            ['A', '1'],
+            ['B', '2'],
+            ['C', '3 4'],
+            ['D', ''],
+            # no E
+        ]
+
+        self.assert_wsgi_config_applied(expected)
+
     def do_worker_class(self, worker_class):
         self.relation_data['wsgi_worker_class'] = worker_class
         hooks.configure_gunicorn()
@@ -131,6 +148,8 @@ class HookTestCase(TestCase):
 
     def test_configure_worker_class_gevent(self):
         self.do_worker_class('gevent')
+
+
 
     @patch('hooks.os.remove')
     def test_wsgi_file_relation_broken(self, remove):

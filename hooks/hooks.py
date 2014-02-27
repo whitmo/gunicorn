@@ -4,6 +4,7 @@
 import os
 import sys
 from multiprocessing import cpu_count
+import shlex
 
 from charmhelpers.core import hookenv
 from charmhelpers.core import host
@@ -92,6 +93,11 @@ def configure_gunicorn():
 
     if wsgi_config['wsgi_workers'] == 0:
         wsgi_config['wsgi_workers'] = cpu_count() + 1
+
+    env_extra = wsgi_config.get('env_extra', '')
+    wsgi_config['env_extra'] = [
+        v.split('=') for v in shlex.split(env_extra) if '=' in v
+    ]
 
     # only specify access log details if the access configs are set
     if wsgi_config['wsgi_access_logfile']:

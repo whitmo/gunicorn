@@ -9,7 +9,8 @@ description: |
   server resources, and fairly speedy.
 
   The providers of the wsgi relation must provide working_dir, plus optionally
-  any of the charms config directives, which will override the charms config.
+  any of the charm's config directives, which will override the current config
+  for the charm.
 subordinate: true
 requires:
     wsgi-file:
