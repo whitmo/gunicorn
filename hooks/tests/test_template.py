@@ -93,7 +93,7 @@ class TemplateTestCase(TestCase):
             'wsgi_wsgi_file',
         ]
         ctx = dict((k, k.upper()) for k in keys)
-        ctx['env_extra'] = dict(A="1", B="1 2").items()
+        ctx['env_extra'] = [["A", "1"], ["B", "1 2"]]
         return ctx
 
     def test_template(self):
