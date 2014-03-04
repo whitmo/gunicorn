@@ -1,6 +1,9 @@
 #!/usr/bin/make
 PYTHON := /usr/bin/env python
 
+unit_test:
+	nosetests hooks
+
 sync-charm-helpers: bin/charm_helpers_sync.py
 	@mkdir -p bin
 	@$(PYTHON) bin/charm_helpers_sync.py -c charm-helpers.yaml
