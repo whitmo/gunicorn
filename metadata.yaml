@@ -7,6 +7,10 @@ description: |
   pre-fork worker model ported from Ruby's Unicorn project. The Gunicorn server
   is broadly compatible with various web frameworks, simply implemented, light on
   server resources, and fairly speedy.
+
+  The providers of the wsgi relation must provide working_dir, plus optionally
+  any of the charm's config directives, which will override the current config
+  for the charm.
 subordinate: true
 requires:
     wsgi-file:

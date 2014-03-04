@@ -2,13 +2,14 @@
 # This file is managed by Juju; ANY CHANGES WILL BE OVERWRITTEN
 #--------------------------------------------------------------
 
-description "Gunicorn daemon for the {{ project_name }} project"
+description "Gunicorn daemon for the {{ project_name }} project"
 
 start on (local-filesystems and net-device-up IFACE=eth0)
 stop on runlevel [!12345]
 
 # If the process quits unexpectadly trigger a respawn
 respawn
+respawn limit 10 5
 
 setuid {{ wsgi_user }}
 setgid {{ wsgi_group }}
@@ -17,6 +18,9 @@ chdir {{ working_dir }}
 # This line can be removed and replace with the --pythonpath {{ python_path }} \
 # option with Gunicorn>1.17
 env PYTHONPATH={{ python_path }}
+{% for name, value in env_extra -%}
+env {{ name }}="{{ value }}"
+{% endfor %}
 
 exec gunicorn \
     --name={{ project_name }} \
@@ -31,4 +35,11 @@ exec gunicorn \
     --bind={{ listen_ip }}:{{ port }} \
     --log-file={{ wsgi_log_file }} \
     --log-level={{ wsgi_log_level }} \
-    {{ wsgi_extra }} {{ wsgi_wsgi_file }}
+    {%- if wsgi_access_logfile %}
+    --access-logfile={{ wsgi_access_logfile }} \
+    {%- endif %}
+    {%- if wsgi_access_logformat %}
+    --access-logformat={{ wsgi_access_logformat }} \
+    {%- endif %}
+    {{ wsgi_extra }} \
+    {{ wsgi_wsgi_file }}
