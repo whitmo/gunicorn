@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # vim: et ai ts=4 sw=4:
 
+import ast
 import os
 import sys
 from multiprocessing import cpu_count
@@ -104,9 +105,22 @@ def configure_gunicorn():
         wsgi_config['wsgi_workers'] = cpu_count() + 1
 
     env_extra = wsgi_config.get('env_extra', '')
-    wsgi_config['env_extra'] = [
-        v.split('=') for v in shlex.split(env_extra) if '=' in v
-    ]
+
+    # support old python dict format for upgrade path
+    extra = []
+    # attempt dict parsing
+    try:
+        dict_str = '{' + env_extra + '}'
+        extra = [[k, str(v)] for k, v in ast.literal_eval(dict_str).items()]
+    except SyntaxError:
+        pass
+
+    if not extra:
+        extra = [
+            v.split('=', 1) for v in shlex.split(env_extra) if '=' in v
+        ]
+
+    wsgi_config['env_extra'] = extra
 
     process_template('upstart.tmpl', wsgi_config, project_conf)
 

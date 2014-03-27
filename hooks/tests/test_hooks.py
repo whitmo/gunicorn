@@ -129,6 +129,19 @@ class HookTestCase(TestCase):
 
         self.assert_wsgi_config_applied(expected)
 
+    def test_env_extra_old_style_parsing(self):
+        self.relation_data['env_extra'] = "'A': '1', 'B': 2"
+
+        hooks.configure_gunicorn()
+
+        expected = self.get_default_context()
+        expected['env_extra'] = [
+            ['A', '1'],
+            ['B', '2'],
+        ]
+
+        self.assert_wsgi_config_applied(expected)
+
     def do_worker_class(self, worker_class):
         self.relation_data['wsgi_worker_class'] = worker_class
         hooks.configure_gunicorn()
@@ -146,8 +159,6 @@ class HookTestCase(TestCase):
 
     def test_configure_worker_class_gevent(self):
         self.do_worker_class('gevent')
-
-
 
     @patch('hooks.os.remove')
     def test_wsgi_file_relation_broken(self, remove):
