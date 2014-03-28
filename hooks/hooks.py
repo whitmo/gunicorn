@@ -112,7 +112,7 @@ def configure_gunicorn():
     try:
         dict_str = '{' + env_extra + '}'
         extra = [[k, str(v)] for k, v in ast.literal_eval(dict_str).items()]
-    except SyntaxError:
+    except (SyntaxError, ValueError):
         pass
 
     if not extra:
