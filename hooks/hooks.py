@@ -31,7 +31,7 @@ def sanitize(s):
 
 
 def sanitized_service_name():
-    return sanitize(hookenv.remote_unit().split('/')[0])
+    return sanitize(hookenv.local_unit().split('/')[0])
 
 
 def upstart_conf_path(name):
