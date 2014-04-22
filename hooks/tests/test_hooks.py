@@ -87,6 +87,19 @@ class HookTestCase(TestCase):
         self.fetch.apt_install.assert_called_once_with(
             ['gunicorn', 'python-jinja2'])
 
+    @patch('hooks.glob.glob')
+    @patch('os.remove')
+    def test_python_upgrade_hook(self, mock_remove, mock_glob):
+        path = '/etc/gunicorn.d/unit.conf'
+        mock_glob.return_value = [path]
+        hooks.upgrade()
+        self.assertTrue(self.fetch.apt_update.called)
+        self.fetch.apt_install.assert_called_once_with(
+            ['gunicorn', 'python-jinja2'])
+
+        self.host.service_stop.assert_called_once_with('gunicorn')
+        mock_remove.assert_called_once_with(path)
+
     def test_default_configure_gunicorn(self):
         hooks.configure_gunicorn()
         expected = self.get_default_context()

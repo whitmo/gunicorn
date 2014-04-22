@@ -6,6 +6,7 @@ import os
 import sys
 from multiprocessing import cpu_count
 import shlex
+import glob
 
 from charmhelpers.core import hookenv
 from charmhelpers.core import host
@@ -56,11 +57,37 @@ def process_template(template_name, template_vars, destination):
 # Hook functions
 ###############################################################################
 
-
-@hooks.hook('install', 'upgrade-charm')
-def install():
+def ensure_packages():
     fetch.apt_update()
     fetch.apt_install(CHARM_PACKAGES)
+
+
+@hooks.hook('install')
+def install():
+    ensure_packages()
+
+
+@hooks.hook('upgrade-charm')
+def upgrade():
+    ensure_packages()
+    # if we are upgrading from older charm that used gunicorn runner rather
+    # than upstart, remove that job/config
+    # sadly, we don't 100% know the name of the job, as it depends on the
+    # remote unit name, which we don't know in upgrade-charm hook
+    # TODO: remove this at somepoint
+    files = glob.glob('/etc/gunicorn.d/*.conf')
+    if files:
+        try:
+            hookenv.log('stopping system gunicorn service')
+            host.service_stop('gunicorn')
+        except:
+            pass
+    for file in files:
+        try:
+            hookenv.log('removing old guncorn config: %s' % file)
+            os.remove(file)
+        except:
+            pass
 
 
 @hooks.hook(
