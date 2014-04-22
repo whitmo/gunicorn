@@ -128,7 +128,7 @@ def configure_gunicorn():
     elif wsgi_config['wsgi_worker_class'] == 'tornado':
         fetch.apt_install('python-tornado')
 
-    if wsgi_config['wsgi_workers'] == 0:
+    if wsgi_config['wsgi_workers'] in (0, '0'):
         wsgi_config['wsgi_workers'] = cpu_count() + 1
 
     env_extra = wsgi_config.get('env_extra', '')
