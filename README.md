@@ -6,7 +6,7 @@ Author:
 
 # How to configure the charm
 
-To deploy a charm with this subordinate it must minimaly:
+To deploy a charm with this subordinate it must minimally:
 
  1. Provide the wsgi interface.
  2. Set the `working_dir` relation variable in the wsgi hook.
@@ -48,7 +48,7 @@ Notable changes:
 - if upgrading from r1 or r2, the old gunicorn config is removed, leaving just
   the custom upstart job.
 
-No backwards incompativble changes.
+No backwards incompatible changes.
 
 3:
 
