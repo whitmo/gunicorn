@@ -105,6 +105,13 @@ class HookTestCase(TestCase):
         expected = self.get_default_context()
         self.assert_wsgi_config_applied(expected)
 
+    def test_configure_gunicorn_no_relations(self):
+        self.hookenv.relations_of_type.return_value = []
+        hooks.configure_gunicorn()
+        self.hookenv.log.assert_called_once_With("No wsgi-file relation, nothing to do")
+        self.assertFalse(self.process_template.called)
+        self.assertFalse(self.host.service_restart.called)
+
     def test_configure_gunicorn_no_working_dir(self):
         del self.relation_data['working_dir']
         hooks.configure_gunicorn()
@@ -152,6 +159,22 @@ class HookTestCase(TestCase):
             ['A', '1'],
             ['B', '2'],
         ]
+
+        self.assert_wsgi_config_applied(expected)
+
+    def test_wsgi_extra_old_style_parsing_single_param(self):
+        self.relation_data['wsgi_extra'] = "'--some-option',"
+        hooks.configure_gunicorn()
+        expected = self.get_default_context()
+        expected['wsgi_extra'] = "--some-option"
+
+        self.assert_wsgi_config_applied(expected)
+
+    def test_wsgi_extra_old_style_parsing_mulit_param(self):
+        self.relation_data['wsgi_extra'] = "'--some-option', '--other-option',"
+        hooks.configure_gunicorn()
+        expected = self.get_default_context()
+        expected['wsgi_extra'] = "--some-option --other-option"
 
         self.assert_wsgi_config_applied(expected)
 

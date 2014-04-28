@@ -22,7 +22,7 @@ CHARM_PACKAGES = ["gunicorn", "python-jinja2"]
 ###############################################################################
 
 
-def sanitize(s):
+def sanitize(s):  # pragma: no cover
     s = s.replace(':', '_')
     s = s.replace('-', '_')
     s = s.replace('/', '_')
@@ -31,7 +31,7 @@ def sanitize(s):
     return s
 
 
-def sanitized_service_name():
+def sanitized_service_name():  # pragma: no cover
     return sanitize(hookenv.local_unit().split('/')[0])
 
 
@@ -80,13 +80,13 @@ def upgrade():
         try:
             hookenv.log('stopping system gunicorn service')
             host.service_stop('gunicorn')
-        except:
+        except:  # pragma: no cover
             pass
     for file in files:
         try:
             hookenv.log('removing old guncorn config: %s' % file)
             os.remove(file)
-        except:
+        except:  # pragma: no cover
             pass
 
 
@@ -133,7 +133,7 @@ def configure_gunicorn():
 
     env_extra = wsgi_config.get('env_extra', '')
 
-    # support old python dict format for upgrade path
+    # support old python dict format for env_extra for upgrade path
     extra = []
     # attempt dict parsing
     try:
@@ -149,6 +149,21 @@ def configure_gunicorn():
 
     wsgi_config['env_extra'] = extra
 
+
+    # support old python list format for wsgi_extra
+    # it will be a partial tuple of strings
+    # e.g. wsgi_extra = "'foo', 'bar',"
+
+    wsgi_extra = wsgi_config.get('wsgi_extra', '')
+    # attempt tuple parsing
+    try:
+        tuple_str = '(' + wsgi_extra + ')'
+        wsgi_extra = " ".join(ast.literal_eval(tuple_str))
+    except (SyntaxError, ValueError):
+        pass
+
+    wsgi_config['wsgi_extra'] = wsgi_extra
+
     process_template('upstart.tmpl', wsgi_config, project_conf)
 
     # We need this because when the contained charm configuration or code
@@ -162,11 +177,11 @@ def wsgi_file_relation_broken():
     host.service_stop(service_name)
     try:
         os.remove(upstart_conf_path(service_name))
-    except OSError as exc:
+    except OSError as exc:  # pragma: no cover
         if exc.errno != 2:
             raise
     hookenv.log("removed gunicorn upstart config")
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     hooks.execute(sys.argv)

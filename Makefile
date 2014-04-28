@@ -2,7 +2,7 @@
 PYTHON := /usr/bin/env python
 
 unit_test:
-	nosetests --with-coverage --cover-package=hooks hooks
+	nosetests -s --with-coverage --cover-package=hooks hooks
 
 sync-charm-helpers: bin/charm_helpers_sync.py
 	@mkdir -p bin
