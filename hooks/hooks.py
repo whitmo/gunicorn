@@ -6,7 +6,9 @@ import os
 import sys
 from multiprocessing import cpu_count
 import shlex
+import shutil
 import glob
+import subprocess
 
 from charmhelpers.core import hookenv
 from charmhelpers.core import host
@@ -35,10 +37,6 @@ def sanitized_service_name():  # pragma: no cover
     return sanitize(hookenv.local_unit().split('/')[0])
 
 
-def upstart_conf_path(name):
-    return '/etc/init/%s.conf' % name
-
-
 def process_template(template_name, template_vars, destination):
     # deferred import so install hook can run to install jinja2
     from jinja2 import Environment, FileSystemLoader
@@ -62,6 +60,33 @@ def ensure_packages():
     fetch.apt_install(CHARM_PACKAGES)
 
 
+def remove_old_services():
+    """Clean up older charm config if we are upgrading to new python based charm"""
+
+    # ensure service is disabled
+    subprocess.check_call(["update-rc.d", "-f", "gunicorn", "disable"])
+
+    # ensure stopped
+    try:
+        host.service_stop('gunicorn')
+    except:  # pragma: no cover
+        pass
+
+    # ensure can't be accidentally started with the name "gunicorn"
+    if os.path.exists("/etc/init.d/gunicorn"):
+        shutil.move("/etc/init.d/gunicorn", "/etc/init.d/gunicorn.disabled")
+
+    # ensure any old config removed. Sadly, we don't 100% know the name of the
+    # job, as in the old charm it depends on the remote unit name, which we
+    # don't know in upgrade-charm, so remove all.
+    for conf in glob.glob('/etc/gunicorn.d/*.conf'):
+        try:
+            hookenv.log('removing old guncorn config: %s' % conf)
+            os.remove(conf)
+        except:  # pragma: no cover
+            pass
+
+
 @hooks.hook('install')
 def install():
     ensure_packages()
@@ -70,24 +95,9 @@ def install():
 @hooks.hook('upgrade-charm')
 def upgrade():
     ensure_packages()
-    # if we are upgrading from older charm that used gunicorn runner rather
-    # than upstart, remove that job/config
-    # sadly, we don't 100% know the name of the job, as it depends on the
-    # remote unit name, which we don't know in upgrade-charm hook
-    # TODO: remove this at somepoint
-    files = glob.glob('/etc/gunicorn.d/*.conf')
-    if files:
-        try:
-            hookenv.log('stopping system gunicorn service')
-            host.service_stop('gunicorn')
-        except:  # pragma: no cover
-            pass
-    for file in files:
-        try:
-            hookenv.log('removing old guncorn config: %s' % file)
-            os.remove(file)
-        except:  # pragma: no cover
-            pass
+
+    # TODO: remove this at somepoint in the future.
+    remove_old_services()
 
 
 @hooks.hook(
@@ -107,7 +117,7 @@ def configure_gunicorn():
     service_name = sanitized_service_name()
     wsgi_config['unit_name'] = service_name
 
-    project_conf = upstart_conf_path(service_name)
+    project_conf = "/etc/init/gunicorn.conf"
 
     working_dir = relation_data.get('working_dir', None)
     if not working_dir:
@@ -168,15 +178,14 @@ def configure_gunicorn():
 
     # We need this because when the contained charm configuration or code
     # changed Gunicorn needs to restart to run the new code.
-    host.service_restart(service_name)
+    host.service_restart("gunicorn")
 
 
 @hooks.hook("wsgi_file_relation_broken")
 def wsgi_file_relation_broken():
-    service_name = sanitized_service_name()
-    host.service_stop(service_name)
+    host.service_stop("gunicorn")
     try:
-        os.remove(upstart_conf_path(service_name))
+        os.remove("/etc/init/gunicorn.conf")
     except OSError as exc:  # pragma: no cover
         if exc.errno != 2:
             raise

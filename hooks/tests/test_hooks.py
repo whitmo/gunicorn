@@ -53,6 +53,7 @@ class HookTestCase(TestCase):
         self.hookenv = self.apply_patch('hooks.hookenv')
         self.fetch = self.apply_patch('hooks.fetch')
         self.host = self.apply_patch('hooks.host')
+	self.subprocess = self.apply_patch('hooks.subprocess')
 
         self.hookenv.config.return_value = self.config
         self.hookenv.relations_of_type.return_value = [self.relation_data]
@@ -66,9 +67,9 @@ class HookTestCase(TestCase):
     def assert_wsgi_config_applied(self, expected):
         tmpl, config, path = self.process_template.call_args[0]
         self.assertEqual(tmpl, 'upstart.tmpl')
-        self.assertEqual(path, '/etc/init/%s.conf' % self.SERVICE_NAME)
+        self.assertEqual(path, '/etc/init/gunicorn.conf')
         self.assertEqual(config, expected)
-        self.host.service_restart.assert_called_once_with(self.SERVICE_NAME)
+        self.host.service_restart.assert_called_once_with("gunicorn")
 
     def get_default_context(self):
         expected = DEFAULTS.copy()
@@ -87,18 +88,28 @@ class HookTestCase(TestCase):
         self.fetch.apt_install.assert_called_once_with(
             ['gunicorn', 'python-jinja2'])
 
-    @patch('hooks.glob.glob')
-    @patch('os.remove')
-    def test_python_upgrade_hook(self, mock_remove, mock_glob):
-        path = '/etc/gunicorn.d/unit.conf'
-        mock_glob.return_value = [path]
+    @patch('hooks.remove_old_services')
+    def test_python_upgrade_hook(self, mock_remove):
         hooks.upgrade()
         self.assertTrue(self.fetch.apt_update.called)
         self.fetch.apt_install.assert_called_once_with(
             ['gunicorn', 'python-jinja2'])
 
+    # TODO: remove in future
+    @patch('hooks.glob.glob')
+    @patch('os.remove')
+    @patch('os.path.exists')
+    @patch('shutil.move')
+    def test_remove_old_services(self, mock_move, mock_exists, mock_remove, mock_glob):
+        path = '/etc/gunicorn.d/unit.conf'
+        mock_glob.return_value = [path]
+        mock_exists.return_value = True
+
+        hooks.remove_old_services()
+
         self.host.service_stop.assert_called_once_with('gunicorn')
         mock_remove.assert_called_once_with(path)
+        mock_move.assert_called_once_with("/etc/init.d/gunicorn", "/etc/init.d/gunicorn.disabled")
 
     def test_default_configure_gunicorn(self):
         hooks.configure_gunicorn()
@@ -178,6 +189,14 @@ class HookTestCase(TestCase):
 
         self.assert_wsgi_config_applied(expected)
 
+    def test_wsgi_extra_old_style_parsing_bad_value(self):
+        self.relation_data['wsgi_extra'] = "BAD PYTHON"
+        hooks.configure_gunicorn()
+        expected = self.get_default_context()
+        expected['wsgi_extra'] = "BAD PYTHON"
+
+        self.assert_wsgi_config_applied(expected)
+
     def do_worker_class(self, worker_class):
         self.relation_data['wsgi_worker_class'] = worker_class
         hooks.configure_gunicorn()
@@ -199,6 +218,5 @@ class HookTestCase(TestCase):
     @patch('hooks.os.remove')
     def test_wsgi_file_relation_broken(self, remove):
         hooks.wsgi_file_relation_broken()
-        self.host.service_stop.assert_called_once_with(self.SERVICE_NAME)
-        remove.assert_called_once_with(
-            '/etc/init/%s.conf' % self.SERVICE_NAME)
+        self.host.service_stop.assert_called_once_with("gunicorn")
+        remove.assert_called_once_with('/etc/init/gunicorn.conf')
