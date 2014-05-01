@@ -18,6 +18,8 @@ hooks = hookenv.Hooks()
 
 
 CHARM_PACKAGES = ["gunicorn", "python-jinja2"]
+GUNICORN_INITD_SCRIPT = "/etc/init.d/gunicorn"
+GUNICORN_INITD_SCRIPT_DISABLED = "/etc/init.d/gunicorn.disabled"
 
 ###############################################################################
 # Supporting functions
@@ -48,12 +50,7 @@ def process_template(template_name, template_vars, destination):
 
     with open(destination, 'w') as inject_file:
         inject_file.write(str(template))
-    hookenv.log('written gunicorn upstart config to %s' % destination)
 
-
-###############################################################################
-# Hook functions
-###############################################################################
 
 def ensure_packages():
     fetch.apt_update()
@@ -63,41 +60,50 @@ def ensure_packages():
 def remove_old_services():
     """Clean up older charm config if we are upgrading to new python based charm"""
 
-    # ensure service is disabled
-    subprocess.check_call(["update-rc.d", "-f", "gunicorn", "disable"])
+    if not os.path.exists(GUNICORN_INITD_SCRIPT_DISABLED):
+        # ensure the sysv service is disabled
+        subprocess.call(["update-rc.d", "-f", "gunicorn", "disable"])
 
-    # ensure stopped
-    try:
-        host.service_stop('gunicorn')
-    except:  # pragma: no cover
-        pass
+        # ensure the sysv init is stopped
+        subprocess.call([GUNICORN_INITD_SCRIPT, 'stop'])
 
-    # ensure can't be accidentally started with the name "gunicorn"
-    if os.path.exists("/etc/init.d/gunicorn"):
-        shutil.move("/etc/init.d/gunicorn", "/etc/init.d/gunicorn.disabled")
+        # ensure any old charm config removed. 
+        for conf in glob.glob('/etc/gunicorn.d/*.conf'):
+            try:
+                hookenv.log('removing old guncorn config: %s' % conf)
+                os.remove(conf)
+            except:  # pragma: no cover
+                pass
 
-    # ensure any old config removed. Sadly, we don't 100% know the name of the
-    # job, as in the old charm it depends on the remote unit name, which we
-    # don't know in upgrade-charm, so remove all.
-    for conf in glob.glob('/etc/gunicorn.d/*.conf'):
-        try:
-            hookenv.log('removing old guncorn config: %s' % conf)
-            os.remove(conf)
-        except:  # pragma: no cover
-            pass
+        # rename /etc/init.d/gunicorn 
+        if os.path.exists("/etc/init.d/gunicorn"):
+            shutil.move(GUNICORN_INITD_SCRIPT, GUNICORN_INITD_SCRIPT_DISABLED)
+
+
+def write_initd_proxy():
+    """Some charms/packages may use hardcoded path of /etc/init.d/gunicorn, so 
+    add a wrapper there that proxies to the upstart job."""
+    with open(GUNICORN_INITD_SCRIPT, 'w') as initd:
+        initd.write("#!/bin/sh\nservice gunicorn $*\n")
+    os.chmod(GUNICORN_INITD_SCRIPT, 0755)
+
+
+###############################################################################
+# Hook functions
+###############################################################################
 
 
 @hooks.hook('install')
 def install():
     ensure_packages()
+    write_initd_proxy()
 
 
 @hooks.hook('upgrade-charm')
 def upgrade():
     ensure_packages()
-
-    # TODO: remove this at somepoint in the future.
-    remove_old_services()
+    remove_old_services()  # TODO: remove later
+    write_initd_proxy()
 
 
 @hooks.hook(
@@ -175,6 +181,7 @@ def configure_gunicorn():
     wsgi_config['wsgi_extra'] = wsgi_extra
 
     process_template('upstart.tmpl', wsgi_config, project_conf)
+    hookenv.log('written gunicorn upstart config to %s' % project_conf)
 
     # We need this because when the contained charm configuration or code
     # changed Gunicorn needs to restart to run the new code.

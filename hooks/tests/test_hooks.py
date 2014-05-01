@@ -1,5 +1,5 @@
 from unittest import TestCase
-from mock import patch
+from mock import patch, mock_open
 
 import yaml
 
@@ -26,11 +26,11 @@ class HookTestCase(TestCase):
     _object = object()
     mocks = {}
 
-    def apply_patch(self, name, value=_object, return_value=_object):
+    def apply_patch(self, name, value=_object, return_value=_object, **kwargs):
         if value is not self._object:
-            patcher = patch(name, value)
+            patcher = patch(name, value, **kwargs)
         else:
-            patcher = patch(name)
+            patcher = patch(name, **kwargs)
 
         mock_obj = patcher.start()
         self.addCleanup(patcher.stop)
@@ -53,7 +53,10 @@ class HookTestCase(TestCase):
         self.hookenv = self.apply_patch('hooks.hookenv')
         self.fetch = self.apply_patch('hooks.fetch')
         self.host = self.apply_patch('hooks.host')
-	self.subprocess = self.apply_patch('hooks.subprocess')
+        self.subprocess = self.apply_patch('hooks.subprocess')
+        self.open = mock_open()
+        self.apply_patch("hooks.open", self.open, create=True)
+        self.chmod = self.apply_patch("hooks.os.chmod")
 
         self.hookenv.config.return_value = self.config
         self.hookenv.relations_of_type.return_value = [self.relation_data]
@@ -97,19 +100,27 @@ class HookTestCase(TestCase):
 
     # TODO: remove in future
     @patch('hooks.glob.glob')
-    @patch('os.remove')
-    @patch('os.path.exists')
-    @patch('shutil.move')
+    @patch('hooks.os.remove')
+    @patch('hooks.os.path.exists')
+    @patch('hooks.shutil.move')
     def test_remove_old_services(self, mock_move, mock_exists, mock_remove, mock_glob):
         path = '/etc/gunicorn.d/unit.conf'
         mock_glob.return_value = [path]
-        mock_exists.return_value = True
+        mock_exists.side_effect = [False, True]
 
         hooks.remove_old_services()
-
-        self.host.service_stop.assert_called_once_with('gunicorn')
+    
+        self.assertEqual(
+            self.subprocess.call.mock_calls[0][1][0], 
+            ['update-rc.d', '-f', 'gunicorn', 'disable']
+        )
+        self.assertEqual(
+            self.subprocess.call.mock_calls[1][1][0], 
+            ['/etc/init.d/gunicorn', 'stop']
+        )
         mock_remove.assert_called_once_with(path)
-        mock_move.assert_called_once_with("/etc/init.d/gunicorn", "/etc/init.d/gunicorn.disabled")
+        mock_move.assert_called_once_with(
+            "/etc/init.d/gunicorn", "/etc/init.d/gunicorn.disabled")
 
     def test_default_configure_gunicorn(self):
         hooks.configure_gunicorn()
